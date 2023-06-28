@@ -1,4 +1,5 @@
 const express = require('express');
+const Contacts = require('../../models/contacts');
 
 const { HttpError } = require('../../helpers');
 const contactsService = require('../../models/index');
@@ -27,7 +28,7 @@ const contactSchema = Joi.object({
 const router = express.Router();
 
 router.get('/', async (req, res, next) => {
-	const result = await contactsService.getListContacts();
+	const result = await Contacts.find();
 	res.json(result);
 });
 
