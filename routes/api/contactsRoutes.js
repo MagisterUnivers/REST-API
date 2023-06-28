@@ -2,7 +2,6 @@ const express = require('express');
 const Contacts = require('../../models/contacts');
 
 const { HttpError } = require('../../helpers');
-const contactsService = require('../../models/index');
 const Joi = require('joi');
 
 const contactSchema = Joi.object({
@@ -35,7 +34,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:contactId', async (req, res, next) => {
 	try {
 		const { contactId } = req.params;
-		const result = await contactsService.getContactById(contactId);
+		const result = await Contacts.findById(contactId).exec();
 		if (!result) throw HttpError(404, `Contact with id=${contactId} not found`);
 		res.json(result);
 	} catch (error) {
@@ -47,7 +46,7 @@ router.post('/', async (req, res, next) => {
 	try {
 		const { error } = contactSchema.validate(req.body);
 		if (error) throw HttpError(400, error.message);
-		const result = await contactsService.addContact(req.body);
+		const result = await Contacts.create(req.body);
 		res.status(201).json(result);
 	} catch (error) {
 		next(error);
@@ -57,7 +56,7 @@ router.post('/', async (req, res, next) => {
 router.delete('/:contactId', async (req, res, next) => {
 	try {
 		const { contactId } = req.params;
-		const result = await contactsService.removeContact(contactId);
+		const result = await Contacts.findByIdAndRemove(contactId);
 		if (!result) throw HttpError(404, `Contact with id=${contactId} not found`);
 		res.json({ message: 'Contact deleted' });
 	} catch (error) {
@@ -71,7 +70,7 @@ router.put('/:contactId', async (req, res, next) => {
 		if (error) throw HttpError(400, error.message);
 
 		const { contactId } = req.params;
-		const result = await contactsService.updateContact(contactId, req.body);
+		const result = await Contacts.findByIdAndUpdate(contactId, req.body);
 		if (!result) throw HttpError(404, `Contact with id=${contactId} not found`);
 
 		res.json(result);
