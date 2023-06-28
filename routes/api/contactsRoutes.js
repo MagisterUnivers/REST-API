@@ -24,6 +24,30 @@ const contactSchema = Joi.object({
 		.messages({ 'any.required': 'Missing required phone field' })
 });
 
+//
+//
+
+const updateStatusContact = async (contactId, body) => {
+	if (!body || !body.favorite) {
+		throw HttpError(400, 'Missing field favorite');
+	}
+
+	const result = await Contacts.findByIdAndUpdate(
+		contactId,
+		{ $set: { favorite: body.favorite } },
+		{ new: true }
+	);
+
+	if (!result) {
+		throw HttpError(404, 'Not found');
+	}
+
+	return result;
+};
+
+//
+//
+
 const router = express.Router();
 
 router.get('/', async (req, res, next) => {
@@ -72,6 +96,19 @@ router.put('/:contactId', async (req, res, next) => {
 		const { contactId } = req.params;
 		const result = await Contacts.findByIdAndUpdate(contactId, req.body);
 		if (!result) throw HttpError(404, `Contact with id=${contactId} not found`);
+
+		res.json(result);
+	} catch (error) {
+		next(error);
+	}
+});
+
+router.patch('/:contactId/favorite', async (req, res, next) => {
+	try {
+		const { contactId } = req.params;
+		const { body } = req;
+
+		const result = await updateStatusContact(contactId, body);
 
 		res.json(result);
 	} catch (error) {
