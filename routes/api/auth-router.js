@@ -147,15 +147,15 @@ authRouter.patch(
 			const { path: oldPath, filename } = req.file;
 			const newPath = path.join(avatarDir, filename);
 			await fs.rename(oldPath, newPath);
-			const avatarURL = path.join('avatars', filename);
 			//
 			// resize image
 			const image = await jimp.read(newPath);
 			await image.resize(250, 250).write(newPath);
 			//
+			const avatarURL = path.join('avatars', filename);
 
 			req.user.avatarURL = avatarURL;
-			res.json([req.user]);
+			res.json(req.user);
 		} catch (error) {
 			next(error);
 		}
