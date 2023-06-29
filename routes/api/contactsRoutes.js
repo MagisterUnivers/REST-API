@@ -2,6 +2,7 @@ const express = require('express');
 const Contacts = require('../../models/contacts');
 
 const { HttpError } = require('../../helpers');
+const authenticate = require('../../middleware/authenticate');
 const Joi = require('joi');
 
 const contactSchema = Joi.object({
@@ -50,8 +51,11 @@ const updateStatusContact = async (contactId, body) => {
 
 const router = express.Router();
 
+router.use(authenticate);
+
 router.get('/', async (req, res, next) => {
-	const result = await Contacts.find();
+	const { _id: owner } = req.user;
+	const result = await Contacts.find({ owner }, '-createdAt -updatedAt');
 	res.json(result);
 });
 
@@ -70,7 +74,9 @@ router.post('/', async (req, res, next) => {
 	try {
 		const { error } = contactSchema.validate(req.body);
 		if (error) throw HttpError(400, error.message);
-		const result = await Contacts.create(req.body);
+
+		const { _id: owner } = req.user;
+		const result = await Contacts.create({ ...req.body, owner });
 		res.status(201).json(result);
 	} catch (error) {
 		next(error);
