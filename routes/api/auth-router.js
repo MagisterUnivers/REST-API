@@ -8,6 +8,7 @@ const { SECRET_KEY } = process.env;
 const { HttpError } = require('../../helpers');
 const Users = require('../../models/users');
 const { emailRegexp } = require('../../constants/users');
+const authenticate = require('../../middleware/authenticate');
 const Joi = require('joi');
 
 const authRouter = express.Router();
@@ -49,13 +50,13 @@ authRouter.post('/users/login', async (req, res, next) => {
 	try {
 		const { email: userEmail, password } = req.body;
 		const user = await Users.findOne({ email: userEmail });
-		if (user) throw HttpError(401, 'Unauthorized');
+		if (!user) throw HttpError(400, 'Email or password is wrong');
 
 		const { error } = userLoginSchema.validate(req.body);
 		if (error) throw HttpError(400, error.message);
 
-		const passwordCompare = await bcrypt.compare(password, Users.password);
-		if (passwordCompare) throw HttpError(401, 'Unauthorized');
+		const passwordCompare = await bcrypt.compare(password, user.password);
+		if (passwordCompare) throw HttpError(400, 'Email or password is wrong');
 
 		const { _id: id, email, subscription } = user;
 		const payload = { id };
@@ -69,7 +70,7 @@ authRouter.post('/users/login', async (req, res, next) => {
 	}
 });
 
-authRouter.post('/users/logout', async (req, res, next) => {
+authRouter.post('/users/logout', authenticate, async (req, res, next) => {
 	try {
 		const { _id } = req.user;
 
@@ -83,7 +84,7 @@ authRouter.post('/users/logout', async (req, res, next) => {
 	}
 });
 
-authRouter.get('/users/current', async (req, res, next) => {
+authRouter.get('/users/current', authenticate, async (req, res, next) => {
 	try {
 		const { email, subscription } = req.user;
 
@@ -96,28 +97,32 @@ authRouter.get('/users/current', async (req, res, next) => {
 	}
 });
 
-authRouter.patch('/users/subscription', async (req, res, next) => {
-	try {
-		const { _id, subscription: currentSubscription } = req.user;
-		const { newSubscription } = req.body;
+authRouter.patch(
+	'/users/subscription',
+	authenticate,
+	async (req, res, next) => {
+		try {
+			const { _id, subscription: currentSubscription } = req.user;
+			const { newSubscription } = req.body;
 
-		if (currentSubscription !== newSubscription) {
-			const validSubscriptions = ['starter', 'pro', 'business'];
-			if (validSubscriptions.includes(newSubscription)) {
-				await Users.findByIdAndUpdate(_id, { subscription: newSubscription });
-				res.json({ newSubscription });
+			if (currentSubscription !== newSubscription) {
+				const validSubscriptions = ['starter', 'pro', 'business'];
+				if (validSubscriptions.includes(newSubscription)) {
+					await Users.findByIdAndUpdate(_id, { subscription: newSubscription });
+					res.json({ newSubscription });
+				} else {
+					throw HttpError(
+						400,
+						"Invalid subscription value. Valid options are 'starter', 'pro', or 'business'"
+					);
+				}
 			} else {
-				throw HttpError(
-					400,
-					"Invalid subscription value. Valid options are 'starter', 'pro', or 'business'"
-				);
+				throw HttpError(400, 'This subscription is already in use');
 			}
-		} else {
-			throw HttpError(400, 'This subscription is already in use');
+		} catch (error) {
+			next(error);
 		}
-	} catch (error) {
-		next(error);
 	}
-});
+);
 
 module.exports = authRouter;
