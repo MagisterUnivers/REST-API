@@ -56,7 +56,7 @@ authRouter.post('/users/login', async (req, res, next) => {
 		if (error) throw HttpError(400, error.message);
 
 		const passwordCompare = await bcrypt.compare(password, user.password);
-		if (passwordCompare) throw HttpError(400, 'Email or password is wrong');
+		if (!passwordCompare) throw HttpError(400, 'Email or password is wrong');
 
 		const { _id: id, email, subscription } = user;
 		const payload = { id };
