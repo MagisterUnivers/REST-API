@@ -1,6 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const fs = require('fs/promises');
 const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
+const jimp = require('jimp');
+const path = require('path');
+
 require('dotenv').config();
 
 const { SECRET_KEY } = process.env;
@@ -9,7 +14,10 @@ const { HttpError } = require('../../helpers');
 const Users = require('../../models/users');
 const { emailRegexp } = require('../../constants/users');
 const authenticate = require('../../middleware/authenticate');
+const upload = require('../../middleware/upload');
 const Joi = require('joi');
+
+const avatarDir = path.resolve('public', 'avatars');
 
 const authRouter = express.Router();
 
@@ -33,9 +41,14 @@ authRouter.post('/users/register', async (req, res, next) => {
 		const { error } = userSignupSchema.validate(req.body);
 		if (error) throw HttpError(400, error.message);
 
+		const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
 		const hashPassword = await bcrypt.hash(password, 10);
 
-		const result = await Users.create({ ...req.body, password: hashPassword });
+		const result = await Users.create({
+			...req.body,
+			password: hashPassword,
+			avatarURL
+		});
 
 		res.status(201).json({
 			email: result.email,
@@ -123,6 +136,30 @@ authRouter.patch(
 			next(error);
 		}
 	}
+);
+
+authRouter.patch(
+	'/users/avatars',
+	authenticate,
+	upload.single('avatarURL', async (req, res, next) => {
+		try {
+			// move image
+			const { path: oldPath, filename } = req.file;
+			const newPath = path.join(avatarDir, filename);
+			await fs.rename(oldPath, newPath);
+			const avatarURL = path.join('avatars', filename);
+			//
+			// resize image
+			const image = await jimp.read(newPath);
+			await image.resize(250, 250).write(newPath);
+			//
+
+			req.user.avatarURL = avatarURL;
+			res.json([req.user]);
+		} catch (error) {
+			next(error);
+		}
+	})
 );
 
 module.exports = authRouter;

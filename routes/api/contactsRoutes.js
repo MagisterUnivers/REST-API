@@ -77,16 +77,11 @@ router.get('/:contactId', async (req, res, next) => {
 
 router.post('/', upload.single('avatarURL'), async (req, res, next) => {
 	try {
-		const { path: oldPath, filename } = req.file;
-		const newPath = path.join(avatarDir, filename);
-		await fs.rename(oldPath, newPath);
-		const avatarURL = path.join('avatars', filename);
-
 		const { error } = contactSchema.validate(req.body);
 		if (error) throw HttpError(400, error.message);
 
 		const { _id: owner } = req.user;
-		const result = await Contacts.create({ ...req.body, avatarURL, owner });
+		const result = await Contacts.create({ ...req.body, owner });
 		res.status(201).json(result);
 	} catch (error) {
 		next(error);
