@@ -52,8 +52,6 @@ const updateStatusContact = async (contactId, body) => {
 //
 //
 
-const avatarDir = path.resolve('public', 'avatars');
-
 const router = express.Router();
 
 router.use(authenticate);
