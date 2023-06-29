@@ -141,7 +141,8 @@ authRouter.patch(
 authRouter.patch(
 	'/users/avatars',
 	authenticate,
-	upload.single('avatarURL', async (req, res, next) => {
+	upload.single('avatarURL'),
+	async (req, res, next) => {
 		try {
 			// move image
 			const { path: oldPath, filename } = req.file;
@@ -159,7 +160,7 @@ authRouter.patch(
 		} catch (error) {
 			next(error);
 		}
-	})
+	}
 );
 
 module.exports = authRouter;
