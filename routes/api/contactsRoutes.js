@@ -90,6 +90,10 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => {
 	try {
+		if (!req.body) {
+			throw HttpError(400, 'Missing field favorite');
+		}
+
 		const { error } = contactSchema.validate(req.body);
 		if (error) throw HttpError(400, error.message);
 
