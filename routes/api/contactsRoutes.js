@@ -5,8 +5,11 @@ const schemas = require('../../schemas/contactsSchema');
 const isBodyEmpty = require('../../middleware/isBodyEmpty');
 const isFavoriteStatusEmpty = require('../../middleware/isFavoriteStatusEmpty');
 const idValidation = require('../../middleware/idValidation');
+const authenticate = require('../../middleware/authenticate');
 
 const router = express.Router();
+
+router.use(authenticate);
 
 router.get('/', contactsController.getAllContacts);
 
