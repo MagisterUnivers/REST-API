@@ -45,7 +45,7 @@ const updateFavoriteStatus = async (req, res) => {
 	);
 
 	if (!result) {
-		throw HttpError(404, 'Not found');
+		throw HttpError(404, `Contact with id=${contactId} not found`);
 	}
 	res.json(result);
 };
