@@ -5,8 +5,8 @@ require('dotenv').config();
 const { SECRET_KEY } = process.env;
 
 const { ctrlWrapper } = require('../decorators');
-const { HttpError } = require('../../helpers');
-const Users = require('../../models/users');
+const { HttpError } = require('../helpers');
+const Users = require('../models/users');
 
 //
 

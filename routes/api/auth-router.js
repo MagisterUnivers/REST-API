@@ -4,8 +4,8 @@ const usersController = require('../../controllers/usersController');
 
 const authenticate = require('../../middleware/authenticate');
 const usersSchema = require('../../schemas/usersSchema');
-const { isBodyEmpty } = require('../../middleware/isBodyEmpty');
-const { validateBody } = require('../../decorators/validateBody');
+const isBodyEmpty = require('../../middleware/isBodyEmpty');
+const validateBody = require('../../decorators/validateBody');
 
 const authRouter = express.Router();
 
