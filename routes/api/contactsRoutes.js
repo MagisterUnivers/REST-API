@@ -3,12 +3,14 @@ const contactsController = require('../../controllers/contactsController');
 const { validateBody } = require('../../decorators');
 const schemas = require('../../schemas/contactsSchema');
 const isBodyEmpty = require('../../middleware/isBodyEmpty');
+const isFavoriteStatusEmpty = require('../../middleware/isFavoriteStatusEmpty');
+const idValidation = require('../../middleware/idValidation');
 
 const router = express.Router();
 
 router.get('/', contactsController.getAllContacts);
 
-router.get('/:contactId', contactsController.getOneContact);
+router.get('/:contactId', idValidation, contactsController.getOneContact);
 
 router.post(
 	'/',
@@ -17,10 +19,11 @@ router.post(
 	contactsController.addContact
 );
 
-router.delete('/:contactId', contactsController.deleteContact);
+router.delete('/:contactId', idValidation, contactsController.deleteContact);
 
 router.put(
 	'/:contactId',
+	idValidation,
 	isBodyEmpty,
 	validateBody(schemas.contactSchema),
 	contactsController.updateContactById
@@ -28,6 +31,7 @@ router.put(
 
 router.patch(
 	'/:contactId/favorite',
+	idValidation,
 	isFavoriteStatusEmpty,
 	validateBody(schemas.contactUpdateFavoriteSchema),
 	contactsController.updateFavoriteStatus
