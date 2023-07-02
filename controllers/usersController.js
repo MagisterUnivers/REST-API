@@ -20,18 +20,20 @@ const register = async (req, res) => {
 	const result = await Users.create({ ...req.body, password: hashPassword });
 
 	res.status(201).json({
-		email: result.email,
-		subscription: result.subscription
+		user: {
+			email: result.email,
+			subscription: result.subscription
+		}
 	});
 };
 
 const login = async (req, res) => {
 	const { email: userEmail, password } = req.body;
 	const user = await Users.findOne({ email: userEmail });
-	if (!user) throw HttpError(400, 'Email or password is wrong');
+	if (!user) throw HttpError(401, 'Email or password is wrong');
 
 	const passwordCompare = await bcrypt.compare(password, user.password);
-	if (!passwordCompare) throw HttpError(400, 'Email or password is wrong');
+	if (!passwordCompare) throw HttpError(401, 'Email or password is wrong');
 
 	const { _id: id, email, subscription } = user;
 	const payload = { id };

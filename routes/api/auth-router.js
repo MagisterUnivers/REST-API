@@ -10,27 +10,23 @@ const validateBody = require('../../decorators/validateBody');
 const authRouter = express.Router();
 
 authRouter.post(
-	'/users/register',
+	'/register',
 	isBodyEmpty,
 	validateBody(usersSchema.userRegisterSchema),
 	usersController.register
 );
 
 authRouter.post(
-	'/users/login',
+	'/login',
 	isBodyEmpty,
 	validateBody(usersSchema.userLoginSchema),
 	usersController.login
 );
 
-authRouter.get('/users/current', authenticate, usersController.current);
+authRouter.get('/current', authenticate, usersController.current);
 
-authRouter.post('/users/logout', authenticate, usersController.logout);
+authRouter.post('/logout', authenticate, usersController.logout);
 
-authRouter.patch(
-	'/users/subscription',
-	authenticate,
-	usersController.subscription
-);
+authRouter.patch('/subscription', authenticate, usersController.subscription);
 
 module.exports = authRouter;
