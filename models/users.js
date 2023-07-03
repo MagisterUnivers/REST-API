@@ -28,8 +28,9 @@ const authSchema = Schema(
 			type: Boolean,
 			default: false
 		},
-		veryficationCode: {
-			type: String
+		veryficationToken: {
+			type: String,
+			required: [true, 'Verify token is required']
 		},
 		token: String
 	},

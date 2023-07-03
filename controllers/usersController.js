@@ -21,23 +21,23 @@ const avatarDir = path.resolve('public', 'avatars');
 const register = async (req, res) => {
 	const { email, password } = req.body;
 	const user = await Users.findOne({ email });
-	if (user) throw HttpError(409, 'email already in use');
+	if (user) throw HttpError(409, 'Email already in use');
 
 	const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
 	const hashPassword = await bcrypt.hash(password, 10);
-	const verificationCode = nanoid();
+	const verificationToken = nanoid();
 
 	const result = await Users.create({
 		...req.body,
 		password: hashPassword,
-		verificationCode,
+		verificationToken,
 		avatarURL
 	});
 
 	const sendEmailToVerify = {
 		to: email,
 		subject: 'Verify email',
-		html: `<a target="_blank" href="${BASE_URL}/users/verify/${verificationCode}">Click to verify email</a>`
+		html: `<a target="_blank" href="${BASE_URL}/users/verify/${verificationToken}">Click to verify email</a>`
 	};
 
 	await emailVerify(sendEmailToVerify);
@@ -55,7 +55,7 @@ const login = async (req, res) => {
 	const user = await Users.findOne({ email: userEmail });
 	if (!user) throw HttpError(401, 'Email or password is wrong');
 	if (!user.verify) {
-		throw HttpError(401, 'Email not veryfied');
+		throw HttpError(401, 'Email not register');
 	}
 
 	const passwordCompare = await bcrypt.compare(password, user.password);
@@ -127,34 +127,34 @@ const avatars = async (req, res) => {
 };
 
 const verify = async (req, res) => {
-	const { veryficationCode } = req.params;
-	const user = await Users.findOne(veryficationCode);
-	if (!user) throw HttpError(401, 'User is not veryfied');
+	const { verificationToken } = req.params;
+	const user = await Users.findOne(verificationToken);
+	if (!user) throw HttpError(404, 'User not found');
 	await Users.findByIdAndUpdate(user._id, {
 		verify: true,
-		veryficationCode: ''
+		verificationToken: null
 	});
 
 	res.json({
-		message: 'Email is verified'
+		message: 'Verification successful'
 	});
 };
 
 const resendVerifyEmail = async (req, res) => {
 	const { email } = req.body;
 	const user = await Users.findOne(email);
-	if (!user) throw HttpError(401, 'User is not veryfied');
+	if (!user) throw HttpError(400, 'User is not verified');
 
 	const sendEmailToVerify = {
 		to: email,
 		subject: 'Verify email',
-		html: `<a target="_blank" href="${BASE_URL}/users/verify/${user.verificationCode}">Click to verify email</a>`
+		html: `<a target="_blank" href="${BASE_URL}/users/verify/${user.verificationToken}">Click to verify email</a>`
 	};
 
 	await emailVerify(sendEmailToVerify);
 
 	res.json({
-		message: 'Email success verified'
+		message: 'Verification email sent'
 	});
 };
 

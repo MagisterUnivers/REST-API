@@ -33,7 +33,7 @@ authRouter.post(
 
 authRouter.get('/current', authenticate, usersController.current);
 
-authRouter.get('/verify/:veryficationCode', usersController.verify);
+authRouter.get('/verify/:verificationToken', usersController.verify);
 
 authRouter.post('/logout', authenticate, usersController.logout);
 
