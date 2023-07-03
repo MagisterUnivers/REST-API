@@ -7,6 +7,7 @@ const usersSchema = require('../../schemas/usersSchema');
 const isBodyEmpty = require('../../middleware/isBodyEmpty');
 const validateBody = require('../../decorators/validateBody');
 const upload = require('../../middleware/upload');
+const schemas = require('../../schemas/usersSchema');
 
 const authRouter = express.Router();
 
@@ -24,7 +25,15 @@ authRouter.post(
 	usersController.login
 );
 
+authRouter.post(
+	'/verify',
+	validateBody(schemas.userEmailSchema),
+	usersController.resendVerifyEmail
+);
+
 authRouter.get('/current', authenticate, usersController.current);
+
+authRouter.get('/verify/:veryficationCode', usersController.verify);
 
 authRouter.post('/logout', authenticate, usersController.logout);
 

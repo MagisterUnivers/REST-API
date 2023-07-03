@@ -1,6 +1,7 @@
 const { Schema, model } = require('mongoose');
 const handleMongooseError = require('../helpers/handleMongooseError');
 const { emailRegexp } = require('../constants/users');
+const { string } = require('joi');
 
 const authSchema = Schema(
 	{
@@ -21,6 +22,13 @@ const authSchema = Schema(
 			default: 'starter'
 		},
 		avatarURL: {
+			type: String
+		},
+		verify: {
+			type: Boolean,
+			default: false
+		},
+		veryficationCode: {
 			type: String
 		},
 		token: String

@@ -4,11 +4,13 @@ const jimp = require('jimp');
 const fs = require('fs/promises');
 const path = require('path');
 const gravatar = require('gravatar');
+const { nanoid } = require('nanoid');
 require('dotenv').config();
 
-const { SECRET_KEY } = process.env;
+const { SECRET_KEY, BASE_URL } = process.env;
 
 const { ctrlWrapper } = require('../decorators');
+const emailVerify = require('../helpers/emailVerify');
 const { HttpError } = require('../helpers');
 const Users = require('../models/users');
 
@@ -23,12 +25,22 @@ const register = async (req, res) => {
 
 	const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'mm' });
 	const hashPassword = await bcrypt.hash(password, 10);
+	const verificationCode = nanoid();
 
 	const result = await Users.create({
 		...req.body,
 		password: hashPassword,
+		verificationCode,
 		avatarURL
 	});
+
+	const sendEmailToVerify = {
+		to: email,
+		subject: 'Verify email',
+		html: `<a target="_blank" href="${BASE_URL}/users/verify/${verificationCode}">Click to verify email</a>`
+	};
+
+	await emailVerify(sendEmailToVerify);
 
 	res.status(201).json({
 		user: {
@@ -42,6 +54,9 @@ const login = async (req, res) => {
 	const { email: userEmail, password } = req.body;
 	const user = await Users.findOne({ email: userEmail });
 	if (!user) throw HttpError(401, 'Email or password is wrong');
+	if (!user.verify) {
+		throw HttpError(401, 'Email not veryfied');
+	}
 
 	const passwordCompare = await bcrypt.compare(password, user.password);
 	if (!passwordCompare) throw HttpError(401, 'Email or password is wrong');
@@ -111,11 +126,45 @@ const avatars = async (req, res) => {
 	res.json(req.user);
 };
 
+const verify = async (req, res) => {
+	const { veryficationCode } = req.params;
+	const user = await Users.findOne(veryficationCode);
+	if (!user) throw HttpError(401, 'User is not veryfied');
+	await Users.findByIdAndUpdate(user._id, {
+		verify: true,
+		veryficationCode: ''
+	});
+
+	res.json({
+		message: 'Email is verified'
+	});
+};
+
+const resendVerifyEmail = async (req, res) => {
+	const { email } = req.body;
+	const user = await Users.findOne(email);
+	if (!user) throw HttpError(401, 'User is not veryfied');
+
+	const sendEmailToVerify = {
+		to: email,
+		subject: 'Verify email',
+		html: `<a target="_blank" href="${BASE_URL}/users/verify/${user.verificationCode}">Click to verify email</a>`
+	};
+
+	await emailVerify(sendEmailToVerify);
+
+	res.json({
+		message: 'Email success verified'
+	});
+};
+
 module.exports = {
 	register: ctrlWrapper(register),
 	login: ctrlWrapper(login),
 	logout: ctrlWrapper(logout),
 	current: ctrlWrapper(current),
 	subscription: ctrlWrapper(subscription),
-	avatars: ctrlWrapper(avatars)
+	avatars: ctrlWrapper(avatars),
+	verify: ctrlWrapper(verify),
+	resendVerifyEmail: ctrlWrapper(resendVerifyEmail)
 };
