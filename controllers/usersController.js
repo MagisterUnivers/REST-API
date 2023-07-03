@@ -107,6 +107,7 @@ const avatars = async (req, res) => {
 	const avatarURL = path.join('avatars', filename);
 
 	req.user.avatarURL = avatarURL;
+	await req.user.updateOne({ avatarURL });
 	res.json(req.user);
 };
 

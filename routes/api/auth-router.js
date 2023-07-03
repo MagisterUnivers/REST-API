@@ -30,6 +30,11 @@ authRouter.post('/logout', authenticate, usersController.logout);
 
 authRouter.patch('/subscription', authenticate, usersController.subscription);
 
-authRouter.patch('/avatars', authenticate, upload.single('avatarURL'));
+authRouter.patch(
+	'/avatars',
+	authenticate,
+	upload.single('avatarURL'),
+	usersController.avatars
+);
 
 module.exports = authRouter;
