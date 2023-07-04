@@ -123,7 +123,7 @@ const avatars = async (req, res) => {
 
 	req.user.avatarURL = avatarURL;
 	await req.user.updateOne({ avatarURL });
-	res.json(req.user);
+	res.json(req.user.avatarURL);
 };
 
 const verify = async (req, res) => {
