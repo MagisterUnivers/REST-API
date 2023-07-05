@@ -54,9 +54,7 @@ const login = async (req, res) => {
 	const { email: userEmail, password } = req.body;
 	const user = await Users.findOne({ email: userEmail });
 	if (!user) throw HttpError(401, 'Email or password is wrong');
-	if (!user.verify) {
-		throw HttpError(401, 'Email not register');
-	}
+	if (!user.verify) throw HttpError(401, 'Email not register');
 
 	const passwordCompare = await bcrypt.compare(password, user.password);
 	if (!passwordCompare) throw HttpError(401, 'Email or password is wrong');
@@ -128,22 +126,24 @@ const avatars = async (req, res) => {
 
 const verify = async (req, res) => {
 	const { verificationToken } = req.params;
-	const user = await Users.findOne(verificationToken);
-	if (!user) throw HttpError(404, 'User not found');
+	const user = await Users.findOne({ verificationToken });
+	if (!user) throw HttpError(404);
+
 	await Users.findByIdAndUpdate(user._id, {
 		verify: true,
 		verificationToken: null
 	});
 
-	res.json({
+	res.status(200).json({
 		message: 'Verification successful'
 	});
 };
 
 const resendVerifyEmail = async (req, res) => {
 	const { email } = req.body;
-	const user = await Users.findOne(email);
-	if (!user) throw HttpError(400, 'User is not verified');
+	const user = await Users.findOne({ email });
+	if (!user) throw HttpError(401);
+	if (user.verify) throw HttpError(400, 'Verification has already been passed');
 
 	const sendEmailToVerify = {
 		to: email,
